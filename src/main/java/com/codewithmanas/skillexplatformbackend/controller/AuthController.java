@@ -25,7 +25,7 @@ public class AuthController {
         RegisterResponseDTO authResponseDTO = authService.registerUser(registerRequestDTO);
         ApiResponse<String> response = new ApiResponse<>(
                 201,
-                "User registered successfully",
+                "User registered. Please verify your email.",
                 "",
                 null,
                 UUID.randomUUID().toString(),
@@ -33,6 +33,14 @@ public class AuthController {
         );
 
         return ResponseEntity.status(201).body(response);
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+
+        String response = authService.verifyEmail(token);
+
+        return ResponseEntity.ok().body(response);
     }
 
 
