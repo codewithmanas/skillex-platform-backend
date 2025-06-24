@@ -2,18 +2,15 @@ package com.codewithmanas.skillexplatformbackend.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
-public class AuthRequestDTO {
+public class RegisterResponseDTO {
     @Email(message = "Invalid email")
     @NotBlank(message = "Email is required")
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 8)
     private String password;
 
-    // Getters and Setters
     public @Email @NotBlank String getEmail() {
         return email;
     }

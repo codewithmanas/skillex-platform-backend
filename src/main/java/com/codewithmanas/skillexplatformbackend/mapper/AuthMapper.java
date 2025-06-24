@@ -1,24 +1,24 @@
 package com.codewithmanas.skillexplatformbackend.mapper;
 
-import com.codewithmanas.skillexplatformbackend.dto.AuthRequestDTO;
-import com.codewithmanas.skillexplatformbackend.dto.AuthResponseDTO;
+import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
+import com.codewithmanas.skillexplatformbackend.dto.RegisterRequestDTO;
 import com.codewithmanas.skillexplatformbackend.entity.User;
 
 public class AuthMapper {
 
-    public static AuthResponseDTO toDTO(User user) {
-        AuthResponseDTO authResponseDTO = new AuthResponseDTO();
+    public static RegisterResponseDTO toDTO(User user) {
+        RegisterResponseDTO registerResponseDTO = new RegisterResponseDTO();
 
-        authResponseDTO.setEmail(user.getEmail());
-        authResponseDTO.setPassword(user.getHashedPassword());
+        registerResponseDTO.setEmail(user.getEmail());
+        registerResponseDTO.setPassword(user.getHashedPassword());
 
-        return  authResponseDTO;
+        return  registerResponseDTO;
     }
 
-    public static User toEntity(AuthRequestDTO authRequestDTO) {
+    public static User toEntity(RegisterRequestDTO registerRequestDTO, String encodedPassword) {
         User user = new User();
-        user.setEmail(authRequestDTO.getEmail());
-        user.setHashedPassword(authRequestDTO.getPassword());
+        user.setEmail(registerRequestDTO.getEmail());
+        user.setHashedPassword(encodedPassword);
 
         return user;
     }

@@ -1,9 +1,10 @@
 package com.codewithmanas.skillexplatformbackend.controller;
 
-import com.codewithmanas.skillexplatformbackend.dto.AuthRequestDTO;
-import com.codewithmanas.skillexplatformbackend.dto.AuthResponseDTO;
+import com.codewithmanas.skillexplatformbackend.dto.RegisterRequestDTO;
+import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
 import com.codewithmanas.skillexplatformbackend.service.AuthService;
 import com.codewithmanas.skillexplatformbackend.util.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,12 +21,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponseDTO>> register(@RequestBody AuthRequestDTO authRequestDTO) {
-        AuthResponseDTO authResponseDTO = authService.registerUser(authRequestDTO);
-        ApiResponse<AuthResponseDTO> response = new ApiResponse<>(
+    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO) {
+        RegisterResponseDTO authResponseDTO = authService.registerUser(registerRequestDTO);
+        ApiResponse<String> response = new ApiResponse<>(
                 201,
                 "User registered successfully",
-                authResponseDTO,
+                "",
                 null,
                 UUID.randomUUID().toString(),
                 "/api/auth/register"
@@ -34,13 +35,14 @@ public class AuthController {
         return ResponseEntity.status(201).body(response);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody AuthRequestDTO authRequestDTO) {
-        System.out.println("email: " + authRequestDTO.getEmail());
-        System.out.println("password: " + authRequestDTO.getPassword());
 
-//        AuthResponseDTO authResponseDTO = authService.loginUser(authRequestDTO);
-        boolean loggedIn = authService.loginUser(authRequestDTO);
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody RegisterRequestDTO registerRequestDTO) {
+        System.out.println("email: " + registerRequestDTO.getEmail());
+        System.out.println("password: " + registerRequestDTO.getPassword());
+
+//        RegisterResponseDTO registerResponseDTO = authService.loginUser(registerRequestDTO);
+        boolean loggedIn = authService.loginUser(registerRequestDTO);
 
         if (loggedIn) {
             return ResponseEntity.status(200).body("Logged in successful");
@@ -54,6 +56,5 @@ public class AuthController {
     public ResponseEntity<String> getUser(@RequestBody UUID id) {
         return ResponseEntity.ok().body("User details fetched successfully");
     }
-
 
 }

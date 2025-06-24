@@ -1,11 +1,12 @@
 package com.codewithmanas.skillexplatformbackend.service;
 
-import com.codewithmanas.skillexplatformbackend.dto.AuthRequestDTO;
-import com.codewithmanas.skillexplatformbackend.dto.AuthResponseDTO;
+import com.codewithmanas.skillexplatformbackend.dto.RegisterRequestDTO;
+import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
 import com.codewithmanas.skillexplatformbackend.entity.User;
 import com.codewithmanas.skillexplatformbackend.exception.EmailAlreadyExistsException;
 import com.codewithmanas.skillexplatformbackend.mapper.AuthMapper;
 import com.codewithmanas.skillexplatformbackend.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -14,30 +15,43 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public AuthResponseDTO registerUser(AuthRequestDTO authRequestDTO) {
+    public RegisterResponseDTO registerUser(RegisterRequestDTO registerRequestDTO) {
 
-        boolean userExist = userRepository.existsByEmail(authRequestDTO.getEmail());
+        // Sanitize and Normalize email and password
+        String email = registerRequestDTO.getEmail().trim().toLowerCase();
+
+        // Check if email already exists
+        boolean userExist = userRepository.existsByEmail(registerRequestDTO.getEmail());
 
         if(userExist) {
             throw new EmailAlreadyExistsException("Email is already in use.");
         }
 
-        User user = userRepository.save(AuthMapper.toEntity(authRequestDTO));
-        AuthResponseDTO authResponseDTO = AuthMapper.toDTO(user);
+        String encodedPassword = passwordEncoder.encode(registerRequestDTO.getPassword());
 
-        return authResponseDTO;
+        User user = userRepository.save(AuthMapper.toEntity(registerRequestDTO, encodedPassword));
+        RegisterResponseDTO registerResponseDTO = AuthMapper.toDTO(user);
+
+        // Send email verification
+        // TODO: To be implemented
+
+
+
+        return registerResponseDTO;
     }
 
-    public boolean loginUser(AuthRequestDTO authRequestDTO) {
-        boolean userExist = userRepository.existsByEmail(authRequestDTO.getEmail());
-        Optional<User> user =  userRepository.findByEmail(authRequestDTO.getEmail());
+    public boolean loginUser(RegisterRequestDTO registerRequestDTO) {
+        boolean userExist = userRepository.existsByEmail(registerRequestDTO.getEmail());
+        Optional<User> user =  userRepository.findByEmail(registerRequestDTO.getEmail());
 
-        if(!userRepository.existsByEmail(authRequestDTO.getEmail())) {
+        if(!userRepository.existsByEmail(registerRequestDTO.getEmail())) {
             System.out.println("Email not found.");
         }
 

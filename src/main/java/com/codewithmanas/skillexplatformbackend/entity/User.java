@@ -23,13 +23,16 @@ public class User {
 
     private String fullName;
 
-    @NotBlank
-    @Email
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email")
     @Column(unique = true)
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "Password is required")
     private String hashedPassword;
+
+    private String verificationToken;
+    private String refreshToken;
 
     private String profileImageUrl;
 
@@ -41,7 +44,7 @@ public class User {
     @ElementCollection
     private List<String> interests;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role = UserRole.USER;
 
@@ -54,7 +57,7 @@ public class User {
     private Double rating = 0.0;
 //    private Double rating;
 
-    private Integer ratingCount;
+    private Integer ratingCount = 0;
 
     private Float ratingAvg = 0f;
 
@@ -76,10 +79,10 @@ public class User {
 
     @CurrentTimestamp
     @Column(updatable = false)
-    private String createdAt;
+    private Instant createdAt;
 
     @UpdateTimestamp
-    private String updatedAt;
+    private Instant updatedAt;
 
     // Getter and Setter
 
@@ -275,19 +278,19 @@ public class User {
         isPaymentEnabled = paymentEnabled;
     }
 
-    public String getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
-    public String getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
     }
 }
