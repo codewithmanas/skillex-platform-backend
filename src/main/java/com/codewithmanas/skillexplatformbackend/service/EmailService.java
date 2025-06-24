@@ -1,7 +1,10 @@
 package com.codewithmanas.skillexplatformbackend.service;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -15,12 +18,30 @@ public class EmailService {
 
     @Async
     public void sendVerificationEmail(String to, String link) {
-        SimpleMailMessage message = new SimpleMailMessage();
 
-        message.setTo(to);
-        message.setSubject("Verify your email");
-        message.setText("Click the following link to verify your email (expires in 15 mins):\n" + link);
-        mailSender.send(message);
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject("Verify Your Email");
+            helper.setText(buildEmailContent(link), true); // Set `isHtml=true`
+
+            mailSender.send(message);
+
+        } catch (MessagingException ex) {
+            throw new IllegalStateException("Failed to send email :" + ex.getMessage());
+        }
+    }
+
+    private String buildEmailContent(String verificationLink) {
+        return """
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; text-align: center;">
+                    <h2 style="color: #333;">Verify Your Email</h2>
+                    <p style="font-size: 16px;">Click the button below to verify your email address:</p>
+                    <a href="%s" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
+                    <p style="font-size: 14px; color: #666;">If you didn’t request this, you can ignore this email.</p>
+                </div>
+                """.formatted(verificationLink);
     }
 
 }
