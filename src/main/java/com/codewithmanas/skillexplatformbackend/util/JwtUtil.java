@@ -13,6 +13,7 @@ import java.security.Key;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Map;
 
 @Component
 public class JwtUtil {
@@ -28,6 +29,30 @@ public class JwtUtil {
     public String generateVerificationToken(String email) {
         return Jwts.builder()
                 .subject(email)
+                .issuedAt(new Date())
+                .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public String generateRefreshToken(String email, String role) {
+        return Jwts.builder()
+                .subject(email)
+                .claim("role", role)
+                .issuedAt(new Date())
+                .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public String generateAccessToken(String email, String id, String role) {
+        return Jwts.builder()
+                .subject(email)
+                .claims(Map.of(
+                        "id", id,
+                        "email", email,
+                        "role", role
+                ))
                 .issuedAt(new Date())
                 .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
                 .signWith(secretKey)

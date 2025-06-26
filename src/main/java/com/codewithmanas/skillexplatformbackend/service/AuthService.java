@@ -1,9 +1,11 @@
 package com.codewithmanas.skillexplatformbackend.service;
 
+import com.codewithmanas.skillexplatformbackend.dto.LoginRequestDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterRequestDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
 import com.codewithmanas.skillexplatformbackend.entity.User;
 import com.codewithmanas.skillexplatformbackend.exception.EmailAlreadyExistsException;
+import com.codewithmanas.skillexplatformbackend.exception.InvalidCredentialsException;
 import com.codewithmanas.skillexplatformbackend.mapper.AuthMapper;
 import com.codewithmanas.skillexplatformbackend.repository.UserRepository;
 import com.codewithmanas.skillexplatformbackend.util.JwtUtil;
@@ -81,21 +83,24 @@ public class AuthService {
     }
 
 
-    public boolean loginUser(RegisterRequestDTO registerRequestDTO) {
-        boolean userExist = userRepository.existsByEmail(registerRequestDTO.getEmail());
-        Optional<User> user =  userRepository.findByEmail(registerRequestDTO.getEmail());
-
-        if(!userRepository.existsByEmail(registerRequestDTO.getEmail())) {
-            System.out.println("Email not found.");
+    public boolean loginUser(LoginRequestDTO loginRequestDTO) {
+        if(!userRepository.existsByEmail(loginRequestDTO.getEmail())) {
+                throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        if(user.isPresent()) {
-            System.out.println("PRESENT");
-        }
+        String refreshToken =  userRepository.findByEmail(loginRequestDTO.getEmail())
+                .filter(user -> passwordEncoder.matches(loginRequestDTO.getPassword(), user.getHashedPassword()))
+                .map(user -> jwtUtil.generateRefreshToken(loginRequestDTO.getEmail(), user.getRole().name()))
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
-        System.out.println("User exist: " + userExist);
+        String accessToken =  userRepository.findByEmail(loginRequestDTO.getEmail())
+                .filter(user -> passwordEncoder.matches(loginRequestDTO.getPassword(), user.getHashedPassword()))
+                .map(user -> jwtUtil.generateAccessToken(loginRequestDTO.getEmail(), user.getId().toString(), user.getRole().name()))
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
-        return userExist;
+
+        return true;
+
     }
 
 }

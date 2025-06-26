@@ -1,10 +1,12 @@
 package com.codewithmanas.skillexplatformbackend.controller;
 
+import com.codewithmanas.skillexplatformbackend.dto.LoginRequestDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterRequestDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
 import com.codewithmanas.skillexplatformbackend.service.AuthService;
 import com.codewithmanas.skillexplatformbackend.util.ApiResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,18 +47,25 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody RegisterRequestDTO registerRequestDTO) {
-        System.out.println("email: " + registerRequestDTO.getEmail());
-        System.out.println("password: " + registerRequestDTO.getPassword());
+    public ResponseEntity<ApiResponse<String>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
 
-//        RegisterResponseDTO registerResponseDTO = authService.loginUser(registerRequestDTO);
-        boolean loggedIn = authService.loginUser(registerRequestDTO);
+        boolean loggedIn = authService.loginUser(loginRequestDTO);
+
+        ApiResponse<String> response = new ApiResponse<>(
+                200,
+                "Logged in successful",
+                null,
+                null,
+                UUID.randomUUID().toString(),
+                "/api/auth/login"
+
+        );
 
         if (loggedIn) {
-            return ResponseEntity.status(200).body("Logged in successful");
+            return ResponseEntity.status(200).body(response);
         }
 
-        return ResponseEntity.status(200).body("login failed");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
 

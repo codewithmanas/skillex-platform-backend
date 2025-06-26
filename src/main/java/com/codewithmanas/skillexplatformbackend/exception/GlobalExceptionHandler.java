@@ -47,4 +47,20 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(apiResponse);
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidCredentialsException(InvalidCredentialsException ex) {
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                400,
+                "Invalid Credentials",
+                null,
+                ex.getMessage(),
+                UUID.randomUUID().toString(),
+                "/api/auth/login"
+        );
+
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+
 }
