@@ -30,7 +30,7 @@ public class EmailService {
             Context context = new Context();
             context.setVariable("link", link);
 
-            String htmlContent = springTemplateEngine.process("verification-email.html", context);
+            String htmlContent = springTemplateEngine.process("verification-email", context);
 
 
 
