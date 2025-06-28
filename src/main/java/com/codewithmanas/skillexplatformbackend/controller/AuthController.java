@@ -3,6 +3,7 @@ package com.codewithmanas.skillexplatformbackend.controller;
 import com.codewithmanas.skillexplatformbackend.dto.LoginRequestDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterRequestDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
+import com.codewithmanas.skillexplatformbackend.dto.ResetPasswordRequestDTO;
 import com.codewithmanas.skillexplatformbackend.service.AuthService;
 import com.codewithmanas.skillexplatformbackend.util.ApiResponse;
 import jakarta.validation.Valid;
@@ -22,6 +23,7 @@ public class AuthController {
         this.authService = authService;
     }
 
+    // Register User
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO) {
         RegisterResponseDTO authResponseDTO = authService.registerUser(registerRequestDTO);
@@ -37,6 +39,7 @@ public class AuthController {
         return ResponseEntity.status(201).body(response);
     }
 
+    // Verify Email
     @GetMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
 
@@ -45,7 +48,7 @@ public class AuthController {
         return ResponseEntity.ok().body(response);
     }
 
-
+    // Login User
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<String>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
 
@@ -69,9 +72,34 @@ public class AuthController {
     }
 
 
+    // Get User Details
     @GetMapping("/me")
     public ResponseEntity<String> getUser(@RequestBody UUID id) {
         return ResponseEntity.ok().body("User details fetched successfully");
+    }
+
+    // Forgot Password
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+        if(!authService.forgotPassword(email)) {
+            return ResponseEntity.ok().body("Failed to send reset password email");
+        }
+
+        return ResponseEntity.ok().body("Reset password email sent successfully");
+    }
+
+    // Reset Password
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
+
+        boolean isSuccess = authService.resetPassword(resetPasswordRequestDTO.getNewPassword(), resetPasswordRequestDTO.getToken());
+
+        if(isSuccess) {
+            return ResponseEntity.ok().body("Reset Password Successfully");
+        }
+
+        return ResponseEntity.ok().body("Reset Password Failed");
+
     }
 
 }

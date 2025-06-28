@@ -1,8 +1,6 @@
 package com.codewithmanas.skillexplatformbackend.util;
 
-
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +22,6 @@ public class JwtUtil {
         byte[] keyBytes = Base64.getDecoder().decode(secret.getBytes(StandardCharsets.UTF_8));
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
-
 
     public String generateVerificationToken(String email) {
         return Jwts.builder()
@@ -80,10 +77,22 @@ public class JwtUtil {
                 .getSubject();
     }
 
+    public String generateResetPasswordToken(String email, String id) {
+        return Jwts.builder()
+                .subject(email)
+                .claim("id", id)
+                .issuedAt(new Date())
+                .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
+                .signWith(secretKey)
+                .compact();
+    }
 
-
-
-
-
+    public Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
 
 }
