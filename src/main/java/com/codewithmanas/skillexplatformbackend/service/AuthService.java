@@ -25,9 +25,6 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
 
-    @Value("${app.frontend.verify-url}")
-    private String frontendVerifyUrl;
-
     @Value("${app.frontend.base-url}")
     private String frontendBaseUrl;
 
@@ -45,9 +42,7 @@ public class AuthService {
         String email = registerRequestDTO.getEmail().trim().toLowerCase();
 
         // Check if email already exists
-        boolean userExist = userRepository.existsByEmail(registerRequestDTO.getEmail());
-
-        if(userExist) {
+        if(userRepository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException("Email is already in use.");
         }
 
@@ -64,7 +59,7 @@ public class AuthService {
 
     public void sendVerification(String email) {
         String token = jwtUtil.generateVerificationToken(email);
-        String link = frontendVerifyUrl + "?token=" + token;
+        String link = frontendBaseUrl + "/verify-email" + "?token=" + token;
         emailService.sendVerificationEmail(email, link);
     }
 

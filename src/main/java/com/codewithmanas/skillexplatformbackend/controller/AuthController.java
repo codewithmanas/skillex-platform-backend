@@ -6,6 +6,7 @@ import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
 import com.codewithmanas.skillexplatformbackend.dto.ResetPasswordRequestDTO;
 import com.codewithmanas.skillexplatformbackend.service.AuthService;
 import com.codewithmanas.skillexplatformbackend.util.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,15 +26,19 @@ public class AuthController {
 
     // Register User
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO) {
-        RegisterResponseDTO authResponseDTO = authService.registerUser(registerRequestDTO);
+    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO, HttpServletRequest httpServletRequest) {
+
+        String path = httpServletRequest.getRequestURI(); // Dynamically gets /api/auth/register
+
+        RegisterResponseDTO registerResponseDTO = authService.registerUser(registerRequestDTO);
+
         ApiResponse<String> response = new ApiResponse<>(
                 201,
                 "User registered. Please verify your email.",
                 "",
                 null,
                 UUID.randomUUID().toString(),
-                "/api/auth/register"
+                path
         );
 
         return ResponseEntity.status(201).body(response);

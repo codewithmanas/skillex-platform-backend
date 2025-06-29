@@ -10,7 +10,6 @@ public class AuthMapper {
         RegisterResponseDTO registerResponseDTO = new RegisterResponseDTO();
 
         registerResponseDTO.setEmail(user.getEmail());
-        registerResponseDTO.setPassword(user.getHashedPassword());
 
         return  registerResponseDTO;
     }
@@ -22,6 +21,5 @@ public class AuthMapper {
 
         return user;
     }
-
 
 }

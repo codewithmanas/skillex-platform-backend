@@ -8,9 +8,6 @@ public class RegisterResponseDTO {
     @NotBlank(message = "Email is required")
     private String email;
 
-    @NotBlank(message = "Password is required")
-    private String password;
-
     public @Email @NotBlank String getEmail() {
         return email;
     }
@@ -19,11 +16,4 @@ public class RegisterResponseDTO {
         this.email = email;
     }
 
-    public @NotBlank String getPassword() {
-        return password;
-    }
-
-    public void setPassword(@NotBlank String password) {
-        this.password = password;
-    }
 }
