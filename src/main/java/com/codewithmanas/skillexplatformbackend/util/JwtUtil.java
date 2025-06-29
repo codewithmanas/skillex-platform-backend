@@ -23,9 +23,10 @@ public class JwtUtil {
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateVerificationToken(String email) {
+    public String generateVerificationToken(String email, String userId) {
         return Jwts.builder()
                 .subject(email)
+                .claim("id", userId)
                 .issuedAt(new Date())
                 .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
                 .signWith(secretKey)

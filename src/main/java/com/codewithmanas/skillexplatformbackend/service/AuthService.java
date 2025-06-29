@@ -5,7 +5,9 @@ import com.codewithmanas.skillexplatformbackend.dto.RegisterRequestDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
 import com.codewithmanas.skillexplatformbackend.entity.User;
 import com.codewithmanas.skillexplatformbackend.exception.EmailAlreadyExistsException;
+import com.codewithmanas.skillexplatformbackend.exception.EmailAlreadyVerifiedException;
 import com.codewithmanas.skillexplatformbackend.exception.InvalidCredentialsException;
+import com.codewithmanas.skillexplatformbackend.exception.InvalidTokenException;
 import com.codewithmanas.skillexplatformbackend.mapper.AuthMapper;
 import com.codewithmanas.skillexplatformbackend.repository.UserRepository;
 import com.codewithmanas.skillexplatformbackend.util.JwtUtil;
@@ -52,13 +54,13 @@ public class AuthService {
         RegisterResponseDTO registerResponseDTO = AuthMapper.toDTO(user);
 
         // Send email verification
-        sendVerification(email);
+        sendVerification(email, user.getId().toString());
 
         return registerResponseDTO;
     }
 
-    public void sendVerification(String email) {
-        String token = jwtUtil.generateVerificationToken(email);
+    public void sendVerification(String email, String userId) {
+        String token = jwtUtil.generateVerificationToken(email, userId);
         String link = frontendBaseUrl + "/verify-email" + "?token=" + token;
         emailService.sendVerificationEmail(email, link);
     }
@@ -66,13 +68,17 @@ public class AuthService {
     // Verify Email
     public String verifyEmail(String token) {
         if(jwtUtil.isTokenExpired(token)) {
-            return "Token Expired";
+           throw new InvalidTokenException("Token is expired");
         }
 
         String email = jwtUtil.extractEmail(token);
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        String userId = jwtUtil.extractAllClaims(token).get("id", String.class);
 
-        if(user.isVerified()) return "User already verified";
+        User user = userRepository.findById(UUID.fromString(userId)).orElseThrow(() -> new InvalidTokenException("User not found"));
+
+        if(user.isVerified()) {
+            throw new EmailAlreadyVerifiedException("Email Already Verified");
+        }
 
         user.setVerified(true);
         user.setEmailVerifiedAt(Instant.now());

@@ -4,6 +4,7 @@ import com.codewithmanas.skillexplatformbackend.dto.LoginRequestDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterRequestDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
 import com.codewithmanas.skillexplatformbackend.dto.ResetPasswordRequestDTO;
+import com.codewithmanas.skillexplatformbackend.exception.InvalidTokenException;
 import com.codewithmanas.skillexplatformbackend.service.AuthService;
 import com.codewithmanas.skillexplatformbackend.util.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,9 +47,24 @@ public class AuthController {
 
     // Verify Email
     @GetMapping("/verify-email")
-    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+    public ResponseEntity<ApiResponse<String>> verifyEmail(@RequestParam String token, HttpServletRequest httpServletRequest) {
 
-        String response = authService.verifyEmail(token);
+        String path = httpServletRequest.getRequestURI();
+
+        if(token.trim().isEmpty()) {
+                throw new InvalidTokenException("Token is missing");
+        }
+
+        String verifiedMessage = authService.verifyEmail(token);
+
+        ApiResponse<String> response = new ApiResponse<>(
+                200,
+                "Email Verified Successfully",
+                verifiedMessage,
+                null,
+                UUID.randomUUID().toString(),
+                path
+        );
 
         return ResponseEntity.ok().body(response);
     }

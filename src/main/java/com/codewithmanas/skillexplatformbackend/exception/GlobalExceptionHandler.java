@@ -1,6 +1,7 @@
 package com.codewithmanas.skillexplatformbackend.exception;
 
 import com.codewithmanas.skillexplatformbackend.util.ApiResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -62,5 +63,35 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(apiResponse);
     }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidTokenException(InvalidTokenException ex) {
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                400,
+                "Invalid or missing token",
+                null,
+                ex.getMessage(),
+                UUID.randomUUID().toString(),
+                "/api/auth/**"
+        );
+
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+
+    @ExceptionHandler(EmailAlreadyVerifiedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleEmailAlreadyVerifiedException(EmailAlreadyVerifiedException ex) {
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                409,
+                "Email Already Verified",
+                null,
+                ex.getMessage(),
+                UUID.randomUUID().toString(),
+                "/api/auth/verify-email"
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(apiResponse);
+    }
+
+
 
 }
