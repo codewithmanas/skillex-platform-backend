@@ -23,36 +23,35 @@ public class JwtUtil {
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateVerificationToken(String email, String userId) {
+    public String generateVerificationToken(String email, String id) {
         return Jwts.builder()
-                .subject(email)
-                .claim("id", userId)
+                .subject(id)
+                .claim("email", email)
                 .issuedAt(new Date())
                 .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
                 .signWith(secretKey)
                 .compact();
     }
 
-    public String generateRefreshToken(String email, String role) {
+    public String generateRefreshToken(String id, String role) {
         return Jwts.builder()
-                .subject(email)
+                .subject(id)
                 .claim("role", role)
                 .issuedAt(new Date())
-                .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
+                .expiration(Date.from(Instant.now().plusSeconds(3600 * 24 * 7))) // 7 days
                 .signWith(secretKey)
                 .compact();
     }
 
     public String generateAccessToken(String email, String id, String role) {
         return Jwts.builder()
-                .subject(email)
+                .subject(id)
                 .claims(Map.of(
-                        "id", id,
                         "email", email,
                         "role", role
                 ))
                 .issuedAt(new Date())
-                .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
+                .expiration(Date.from(Instant.now().plusSeconds(3600 * 24))) // 24 hours
                 .signWith(secretKey)
                 .compact();
     }
@@ -75,13 +74,34 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .getSubject();
+                .get("email", String.class); // get from claims, not subject
     }
+
+    // Extract User Id
+    public String extractUserId(String token) {
+        return Jwts.parser()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject(); // subject now holds the user ID
+    }
+
+    // Extract User Role
+    public String extractRole(String token) {
+        return Jwts.parser()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
+    }
+
 
     public String generateResetPasswordToken(String email, String id) {
         return Jwts.builder()
-                .subject(email)
-                .claim("id", id)
+                .subject(id)
+                .claim("email", email)
                 .issuedAt(new Date())
                 .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
                 .signWith(secretKey)

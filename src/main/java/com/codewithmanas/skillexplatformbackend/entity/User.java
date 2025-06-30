@@ -130,6 +130,14 @@ public class User {
         return hashedPassword;
     }
 
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
     public void setHashedPassword(@NotBlank String hashedPassword) {
         this.hashedPassword = hashedPassword;
     }

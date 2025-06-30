@@ -1,17 +1,14 @@
 package com.codewithmanas.skillexplatformbackend.service;
 
 import com.codewithmanas.skillexplatformbackend.dto.LoginRequestDTO;
+import com.codewithmanas.skillexplatformbackend.dto.LoginResponseDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterRequestDTO;
 import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
 import com.codewithmanas.skillexplatformbackend.entity.User;
-import com.codewithmanas.skillexplatformbackend.exception.EmailAlreadyExistsException;
-import com.codewithmanas.skillexplatformbackend.exception.EmailAlreadyVerifiedException;
-import com.codewithmanas.skillexplatformbackend.exception.InvalidCredentialsException;
-import com.codewithmanas.skillexplatformbackend.exception.InvalidTokenException;
+import com.codewithmanas.skillexplatformbackend.exception.*;
 import com.codewithmanas.skillexplatformbackend.mapper.AuthMapper;
 import com.codewithmanas.skillexplatformbackend.repository.UserRepository;
 import com.codewithmanas.skillexplatformbackend.util.JwtUtil;
-import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -71,8 +68,7 @@ public class AuthService {
            throw new InvalidTokenException("Token is expired");
         }
 
-        String email = jwtUtil.extractEmail(token);
-        String userId = jwtUtil.extractAllClaims(token).get("id", String.class);
+        String userId = jwtUtil.extractUserId(token);
 
         User user = userRepository.findById(UUID.fromString(userId)).orElseThrow(() -> new InvalidTokenException("User not found"));
 
@@ -90,22 +86,46 @@ public class AuthService {
 
 
     // Login User
-    public boolean loginUser(LoginRequestDTO loginRequestDTO) {
-        if(!userRepository.existsByEmail(loginRequestDTO.getEmail())) {
-                throw new InvalidCredentialsException("Invalid email or password");
+    public LoginResponseDTO loginUser(LoginRequestDTO loginRequestDTO) {
+
+        User user = userRepository.findByEmail(loginRequestDTO.getEmail())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+        // Validate password
+        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getHashedPassword())) {
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        String refreshToken =  userRepository.findByEmail(loginRequestDTO.getEmail())
-                .filter(user -> passwordEncoder.matches(loginRequestDTO.getPassword(), user.getHashedPassword()))
-                .map(user -> jwtUtil.generateRefreshToken(loginRequestDTO.getEmail(), user.getRole().name()))
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+        // Check if email is verified
+        if (!user.isVerified()) {
+            throw new EmailNotVerifiedException("Email not verified. Please verify your email before logging in.");
+        }
 
-        String accessToken =  userRepository.findByEmail(loginRequestDTO.getEmail())
-                .filter(user -> passwordEncoder.matches(loginRequestDTO.getPassword(), user.getHashedPassword()))
-                .map(user -> jwtUtil.generateAccessToken(loginRequestDTO.getEmail(), user.getId().toString(), user.getRole().name()))
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId().toString(), user.getRole().name());
+        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getId().toString(), user.getRole().name());
 
-        return true;
+
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
+
+        LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
+        loginResponseDTO.setAccessToken(accessToken);
+        loginResponseDTO.setRefreshToken(refreshToken);
+        loginResponseDTO.setExpiresIn(86400);
+
+//        String refreshToken =  userRepository.findByEmail(loginRequestDTO.getEmail())
+//                .filter(user -> passwordEncoder.matches(loginRequestDTO.getPassword(), user.getHashedPassword()))
+//                .map(user -> jwtUtil.generateRefreshToken(loginRequestDTO.getEmail(), user.getRole().name()))
+//                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+//
+//        String accessToken =  userRepository.findByEmail(loginRequestDTO.getEmail())
+//                .filter(user -> passwordEncoder.matches(loginRequestDTO.getPassword(), user.getHashedPassword()))
+//                .map(user -> jwtUtil.generateAccessToken(loginRequestDTO.getEmail(), user.getId().toString(), user.getRole().name()))
+//                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+
+
+        return loginResponseDTO;
 
     }
 
@@ -128,20 +148,18 @@ public class AuthService {
     // Reset Password
     public boolean resetPassword(String newPassword, String token) {
 
-        Claims claims = jwtUtil.extractAllClaims(token);
-
-        String userId = claims.get("id", String.class);
+        String userId = jwtUtil.extractUserId(token);
 
         User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new RuntimeException("Invalid Token"));
+                .orElseThrow(() -> new InvalidTokenException("Invalid Token"));
 
         if(jwtUtil.isTokenExpired(token)) {
-            throw new RuntimeException("Token is expired");
+            throw new InvalidTokenException("Token is expired");
         }
 
         // Check if new password is same as old password
         if(passwordEncoder.matches(newPassword, user.getHashedPassword())) {
-            throw new RuntimeException("New password must be different from the old password");
+            throw new SameAsOldPasswordException("New password must be different from the old password");
         }
 
         String encodedPassword = passwordEncoder.encode(newPassword);

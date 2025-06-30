@@ -1,9 +1,6 @@
 package com.codewithmanas.skillexplatformbackend.controller;
 
-import com.codewithmanas.skillexplatformbackend.dto.LoginRequestDTO;
-import com.codewithmanas.skillexplatformbackend.dto.RegisterRequestDTO;
-import com.codewithmanas.skillexplatformbackend.dto.RegisterResponseDTO;
-import com.codewithmanas.skillexplatformbackend.dto.ResetPasswordRequestDTO;
+import com.codewithmanas.skillexplatformbackend.dto.*;
 import com.codewithmanas.skillexplatformbackend.exception.InvalidTokenException;
 import com.codewithmanas.skillexplatformbackend.service.AuthService;
 import com.codewithmanas.skillexplatformbackend.util.ApiResponse;
@@ -80,23 +77,25 @@ public class AuthController {
 
     // Login User
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO, HttpServletRequest httpServletRequest) {
 
-        boolean loggedIn = authService.loginUser(loginRequestDTO);
+        String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
 
-        ApiResponse<String> response = new ApiResponse<>(
+        LoginResponseDTO loginResponseDTO = authService.loginUser(loginRequestDTO);
+
+        log.info("[requestId={}] Received login request", requestId);
+
+        ApiResponse<LoginResponseDTO> response = new ApiResponse<>(
                 200,
                 "Logged in successful",
+                loginResponseDTO,
                 null,
-                null,
-                UUID.randomUUID().toString(),
-                "/api/auth/login"
+                requestId,
+                path
 
         );
 
-        if (loggedIn) {
-            return ResponseEntity.status(200).body(response);
-        }
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }

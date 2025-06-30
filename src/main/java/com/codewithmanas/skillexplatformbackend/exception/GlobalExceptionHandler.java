@@ -19,22 +19,26 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<List<String>>> handleValidationException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<List<String>>> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest httpServletRequest) {
+
+        String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
 
         List<String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(error -> error.getField() + ":" + error.getDefaultMessage()).toList();
 
+        log.warn("[requestId={}] Invalid  request", requestId);
+
         ApiResponse<List<String>> response = new ApiResponse<>(
           400,
           "Invalid Request",
           null,
           errors,
-          UUID.randomUUID().toString(),
-          ""
+          requestId,
+            path
         );
-
         return ResponseEntity.badRequest().body(response);
     }
 
@@ -60,19 +64,68 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidCredentialsException(InvalidCredentialsException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleInvalidCredentialsException(InvalidCredentialsException ex, HttpServletRequest httpServletRequest) {
+
+        String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
+
+        log.warn("[requestId={}] Invalid Credentials", requestId);
 
         ApiResponse<Void> apiResponse = new ApiResponse<>(
-                400,
+                401,
                 "Invalid Credentials",
                 null,
                 ex.getMessage(),
-                UUID.randomUUID().toString(),
-                "/api/auth/login"
+                requestId,
+                path
         );
 
-        return ResponseEntity.badRequest().body(apiResponse);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
     }
+
+    @ExceptionHandler(SameAsOldPasswordException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSameAsOldPasswordException(SameAsOldPasswordException ex, HttpServletRequest httpServletRequest) {
+
+        String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
+
+        log.warn("[requestId={}] new password same as old password", requestId);
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                400,
+                "new password same as old password",
+                null,
+                ex.getMessage(),
+                requestId,
+                path
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+    }
+
+
+
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleEmailNotVerifiedException(EmailNotVerifiedException ex, HttpServletRequest httpServletRequest) {
+
+        String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
+
+        log.warn("[requestId={}] Email not verified", requestId);
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                403,
+                "Email not verified",
+                null,
+                ex.getMessage(),
+                requestId,
+                path
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
+    }
+
+
 
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidTokenException(InvalidTokenException ex) {
