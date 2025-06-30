@@ -9,6 +9,8 @@ import com.codewithmanas.skillexplatformbackend.service.AuthService;
 import com.codewithmanas.skillexplatformbackend.util.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class AuthController {
 
     private final AuthService authService;
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     public AuthController(AuthService authService) {
         this.authService = authService;
@@ -30,15 +33,18 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO, HttpServletRequest httpServletRequest) {
 
         String path = httpServletRequest.getRequestURI(); // Dynamically gets /api/auth/register
+        String requestId = UUID.randomUUID().toString(); // generate requestId
 
         RegisterResponseDTO registerResponseDTO = authService.registerUser(registerRequestDTO);
+
+        log.info("[requestId={}] Received register request", requestId);
 
         ApiResponse<String> response = new ApiResponse<>(
                 201,
                 "User registered. Please verify your email.",
                 "",
                 null,
-                UUID.randomUUID().toString(),
+                requestId,
                 path
         );
 
@@ -50,6 +56,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> verifyEmail(@RequestParam String token, HttpServletRequest httpServletRequest) {
 
         String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
 
         if(token.trim().isEmpty()) {
                 throw new InvalidTokenException("Token is missing");
@@ -57,12 +64,14 @@ public class AuthController {
 
         String verifiedMessage = authService.verifyEmail(token);
 
+        log.info("[requestId={}] Received verify-email request", requestId);
+
         ApiResponse<String> response = new ApiResponse<>(
                 200,
                 "Email Verified Successfully",
                 verifiedMessage,
                 null,
-                UUID.randomUUID().toString(),
+                requestId,
                 path
         );
 
