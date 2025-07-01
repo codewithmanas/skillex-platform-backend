@@ -1,11 +1,13 @@
 package com.codewithmanas.skillexplatformbackend.service;
 
 import com.codewithmanas.skillexplatformbackend.dto.ChangePasswordRequestDTO;
+import com.codewithmanas.skillexplatformbackend.dto.UserResponseDTO;
 import com.codewithmanas.skillexplatformbackend.entity.User;
 import com.codewithmanas.skillexplatformbackend.exception.InvalidCredentialsException;
 import com.codewithmanas.skillexplatformbackend.exception.InvalidTokenException;
 import com.codewithmanas.skillexplatformbackend.exception.ResourceNotFoundException;
 import com.codewithmanas.skillexplatformbackend.exception.SameAsOldPasswordException;
+import com.codewithmanas.skillexplatformbackend.mapper.UserMapper;
 import com.codewithmanas.skillexplatformbackend.repository.UserRepository;
 import com.codewithmanas.skillexplatformbackend.util.JwtUtil;
 import jakarta.transaction.Transactional;
@@ -85,6 +87,24 @@ public class UserService {
         String link = frontendBaseUrl + "/reset-password" + "?token=" + token;
 
         emailService.sendChangePasswordConfirmEmail(email, link);
+    }
+
+    // GET Current User
+    public UserResponseDTO getCurrentUser(String token) {
+
+        // Check if token is expired
+        if(jwtUtil.isTokenInvalid(token)) {
+            throw new InvalidTokenException("Token expired");
+        }
+
+        // Extract userId from token
+        String userId = jwtUtil.extractUserId(token);
+
+        // Fetch user from DB
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return UserMapper.toDTO(user);
     }
 
     // DELETE Own Account

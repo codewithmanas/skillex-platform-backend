@@ -80,6 +80,41 @@ public class UserController {
         return ResponseEntity.ok().body("Profile Picture Uploaded");
     }
 
+    // GET Current LoggedIn User
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponseDTO>> getCurrentUser(@RequestHeader("Authorization") String authHeader, HttpServletRequest httpServletRequest){
+        String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
+
+        log.info("[requestId={}] received get current user request", requestId);
+
+        // Validate Header
+        if(authHeader == null || !authHeader.startsWith("Bearer ")){
+            throw new MissingAuthorizationHeaderException("Missing or Invalid Authorization Header");
+        }
+
+        // Extract Token
+        String token = authHeader.substring(7);
+
+        UserResponseDTO userResponseDTO = userService.getCurrentUser(token);
+
+
+
+        ApiResponse<UserResponseDTO> apiResponse = new ApiResponse<>(
+                200,
+                "Current user details fetched successfully.",
+                userResponseDTO,
+                null,
+                requestId,
+                path
+        );
+
+        log.info("[requestId={}] get current user request successful", requestId);
+
+        return ResponseEntity.ok().body(apiResponse);
+
+    }
+
     // DELETE Own Account
     @DeleteMapping("/me")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@RequestHeader("Authorization") String authHeader, HttpServletRequest httpServletRequest) {
