@@ -83,6 +83,48 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
     }
 
+    @ExceptionHandler(MissingAuthorizationHeaderException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingAuthorizationHeaderException(MissingAuthorizationHeaderException ex, HttpServletRequest httpServletRequest) {
+
+        String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
+
+        log.warn("[requestId={}] Unauthorized Request", requestId);
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                401,
+                "Unauthorized Request",
+                null,
+                ex.getMessage(),
+                requestId,
+                path
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(ResourceNotFoundException ex, HttpServletRequest httpServletRequest) {
+
+        String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
+
+        log.warn("[requestId={}] resource not found", requestId);
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                404,
+                "Resource not found",
+                null,
+                ex.getMessage(),
+                requestId,
+                path
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
+    }
+
+
+
     @ExceptionHandler(SameAsOldPasswordException.class)
     public ResponseEntity<ApiResponse<Void>> handleSameAsOldPasswordException(SameAsOldPasswordException ex, HttpServletRequest httpServletRequest) {
 
@@ -128,18 +170,25 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidTokenException(InvalidTokenException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleInvalidTokenException(InvalidTokenException ex, HttpServletRequest httpServletRequest) {
+
+        String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
+
+        log.warn("[requestId={}] Invalid or missing token", requestId);
+
         ApiResponse<Void> apiResponse = new ApiResponse<>(
                 400,
                 "Invalid or missing token",
                 null,
                 ex.getMessage(),
-                UUID.randomUUID().toString(),
-                "/api/auth/**"
+                requestId,
+                path
         );
 
         return ResponseEntity.badRequest().body(apiResponse);
     }
+
 
     @ExceptionHandler(EmailAlreadyVerifiedException.class)
     public ResponseEntity<ApiResponse<Void>> handleEmailAlreadyVerifiedException(EmailAlreadyVerifiedException ex) {

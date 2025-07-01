@@ -1,7 +1,7 @@
 package com.codewithmanas.skillexplatformbackend.util;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import com.codewithmanas.skillexplatformbackend.exception.InvalidTokenException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -24,6 +24,16 @@ public class JwtUtil {
     }
 
     public String generateVerificationToken(String email, String id) {
+        return Jwts.builder()
+                .subject(id)
+                .claim("email", email)
+                .issuedAt(new Date())
+                .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public String generateResetPasswordToken(String email, String id) {
         return Jwts.builder()
                 .subject(id)
                 .claim("email", email)
@@ -56,15 +66,42 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Check if token is expired
-    public boolean isTokenExpired(String token) {
-        return Jwts.parser()
+    /*  JWT Exceptions
+    *   Exception	                 Meaning
+        ExpiredJwtException	         Token is expired.
+        UnsupportedJwtException	     Token has an unsupported format or algorithm.
+        MalformedJwtException	     Token structure is invalid (e.g., wrong number of parts).
+        SignatureException	         Token’s signature is invalid (tampered or wrong secret).
+        SecurityException	         General cryptographic issue (e.g., invalid key).
+        IllegalArgumentException	 Token is null or empty.
+        *
+        *         Jwts.parser()
                 .setSigningKey(secretKey)
                 .build()
-                .parseClaimsJws(token)
+                .parseClaimsJws(token) // throws SignatureException if signature is invalid
                 .getBody()
                 .getExpiration()
                 .before(new Date());
+    *
+    * */
+
+    // Check if token is valid or not
+    public boolean isTokenInvalid(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return claims.getExpiration().before(new Date());
+
+        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException |
+                 SignatureException | SecurityException | IllegalArgumentException ex) {
+            throw new InvalidTokenException("Invalid or expired JWT: " + ex.getMessage());
+
+        }
+
     }
 
     // Extract Email
@@ -95,17 +132,6 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody()
                 .get("role", String.class);
-    }
-
-
-    public String generateResetPasswordToken(String email, String id) {
-        return Jwts.builder()
-                .subject(id)
-                .claim("email", email)
-                .issuedAt(new Date())
-                .expiration(Date.from(Instant.now().plusSeconds(900))) // 15 minutes
-                .signWith(secretKey)
-                .compact();
     }
 
     public Claims extractAllClaims(String token) {

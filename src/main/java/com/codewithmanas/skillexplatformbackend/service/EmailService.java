@@ -64,4 +64,26 @@ public class EmailService {
         }
     }
 
+    @Async
+    public void sendChangePasswordConfirmEmail(String to, String link) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            Context context = new Context();
+            context.setVariable("link", link);
+
+            String htmlContent = springTemplateEngine.process("change-password", context);
+
+            helper.setTo(to);
+            helper.setSubject("Password was changed successfully");
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+        } catch (MessagingException ex) {
+            throw new IllegalStateException("Failed to send email :" + ex.getMessage());
+        }
+    }
+
 }

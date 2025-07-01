@@ -64,7 +64,7 @@ public class AuthService {
 
     // Verify Email
     public String verifyEmail(String token) {
-        if(jwtUtil.isTokenExpired(token)) {
+        if(jwtUtil.isTokenInvalid(token)) {
            throw new InvalidTokenException("Token is expired");
         }
 
@@ -153,7 +153,7 @@ public class AuthService {
         User user = userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new InvalidTokenException("Invalid Token"));
 
-        if(jwtUtil.isTokenExpired(token)) {
+        if(jwtUtil.isTokenInvalid(token)) {
             throw new InvalidTokenException("Token is expired");
         }
 
