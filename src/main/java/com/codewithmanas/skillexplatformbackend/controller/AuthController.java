@@ -83,7 +83,7 @@ public class AuthController {
 
         LoginResponseDTO loginResponseDTO = authService.loginUser(loginRequestDTO);
 
-        log.info("[requestId={}] Received login request", requestId);
+        log.info("[requestId={}] received login request", requestId);
 
         ApiResponse<LoginResponseDTO> response = new ApiResponse<>(
                 200,
@@ -95,6 +95,7 @@ public class AuthController {
 
         );
 
+        log.info("[requestId={}] login request successful", requestId);
 
         return ResponseEntity.ok().body(response);
     }

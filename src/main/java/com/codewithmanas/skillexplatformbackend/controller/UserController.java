@@ -80,4 +80,47 @@ public class UserController {
         return ResponseEntity.ok().body("Profile Picture Uploaded");
     }
 
+    // DELETE Own Account
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@RequestHeader("Authorization") String authHeader, HttpServletRequest httpServletRequest) {
+
+        String path = httpServletRequest.getRequestURI();
+        String requestId = UUID.randomUUID().toString();
+
+        log.info("[requestId={}] received delete own account request", requestId);
+
+        // Validate Header
+        if(authHeader == null || !authHeader.startsWith("Bearer ")){
+            throw new MissingAuthorizationHeaderException("Missing or Invalid Authorization Header");
+        }
+
+        // Extract Token
+        String token = authHeader.substring(7);
+
+        userService.deleteUser(token);
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                200,
+                "Your account has been deleted successfully.",
+                null,
+                null,
+                requestId,
+                path
+        );
+
+        log.info("[requestId={}] delete own account request successful", requestId);
+
+        return ResponseEntity.ok().body(apiResponse);
+    }
+
+    // For Testing Purpose
+    @DeleteMapping()
+    public ResponseEntity<String> deleteUserByEmail(@RequestParam String email) {
+
+        userService.deleteUserByEmail(email);
+
+        return ResponseEntity.ok().body("User account deleted successfully");
+    }
+
+
 }

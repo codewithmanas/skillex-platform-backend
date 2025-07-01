@@ -89,7 +89,7 @@ public class GlobalExceptionHandler {
         String path = httpServletRequest.getRequestURI();
         String requestId = UUID.randomUUID().toString();
 
-        log.warn("[requestId={}] Unauthorized Request", requestId);
+        log.warn("[requestId={}] Missing Authorization Header Exception", requestId);
 
         ApiResponse<Void> apiResponse = new ApiResponse<>(
                 401,
@@ -109,11 +109,11 @@ public class GlobalExceptionHandler {
         String path = httpServletRequest.getRequestURI();
         String requestId = UUID.randomUUID().toString();
 
-        log.warn("[requestId={}] resource not found", requestId);
+        log.warn("[requestId={}] Resource NotFound Exception", requestId);
 
         ApiResponse<Void> apiResponse = new ApiResponse<>(
                 404,
-                "Resource not found",
+                "Resource Not Found",
                 null,
                 ex.getMessage(),
                 requestId,
@@ -175,7 +175,7 @@ public class GlobalExceptionHandler {
         String path = httpServletRequest.getRequestURI();
         String requestId = UUID.randomUUID().toString();
 
-        log.warn("[requestId={}] Invalid or missing token", requestId);
+        log.warn("[requestId={}] Invalid Token Exception", requestId);
 
         ApiResponse<Void> apiResponse = new ApiResponse<>(
                 400,

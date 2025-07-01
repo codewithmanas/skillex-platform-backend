@@ -8,6 +8,7 @@ import com.codewithmanas.skillexplatformbackend.exception.ResourceNotFoundExcept
 import com.codewithmanas.skillexplatformbackend.exception.SameAsOldPasswordException;
 import com.codewithmanas.skillexplatformbackend.repository.UserRepository;
 import com.codewithmanas.skillexplatformbackend.util.JwtUtil;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -84,6 +85,36 @@ public class UserService {
         String link = frontendBaseUrl + "/reset-password" + "?token=" + token;
 
         emailService.sendChangePasswordConfirmEmail(email, link);
+    }
+
+    // DELETE Own Account
+    public void deleteUser(String token) {
+
+        // Check if token is expired
+        if(jwtUtil.isTokenInvalid(token)) {
+            throw new InvalidTokenException("Token expired");
+        }
+
+        // Extract userId from token
+        String userId = jwtUtil.extractUserId(token);
+
+        // Fetch user from DB
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Delete User from DB
+        userRepository.delete(user);
+
+    }
+
+    // For Testing Purpose
+    @Transactional
+    public void deleteUserByEmail(String email) {
+        if(!userRepository.existsByEmail(email)) {
+            throw new ResourceNotFoundException("User with this email does not exist");
+        }
+
+        userRepository.deleteByEmail(email);
     }
 
 }
